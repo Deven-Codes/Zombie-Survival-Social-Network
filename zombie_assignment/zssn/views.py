@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,7 +7,13 @@ from rest_framework import status
 from zssn.serializers import Survivor, Location, SurvivorSerializer, LocationSerializer
 
 @api_view(['GET', 'POST'])
-def survivors(request):
+def survivors(request: Any) -> Response:
+    """
+    Get all data in survivor table when request in GET
+    Add data to survivor table when request in POST
+
+    :args: request: Request parameter (WSGI Request)
+    """
 
     # if request in GET method
     if request.method == 'GET':
@@ -40,6 +48,7 @@ def survivors(request):
             # return repsonse with status 500
             return Response(data = data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    # if request is post
     elif request.method == 'POST':
 
         try:
@@ -89,12 +98,18 @@ def survivors(request):
 
 
 @api_view(['PUT'])
-def survivors_update_location(request, pk):
+def survivors_update_location(request: Any, pk: int) -> Response:
+    """
+    Update row data in survivor table when request in PUT
 
+    :args: request: Request parameter (WSGI Request)
+    """
     # if request if PUT
     if request.method == 'PUT':
 
         try:
+
+            # try to get Survivor object
             try:
                 survivor = Survivor.objects.get(pk=pk)
             except Exception as e:
@@ -109,6 +124,7 @@ def survivors_update_location(request, pk):
                 # return repsonse with status 400
                 return Response(data = data, status=status.HTTP_400_BAD_REQUEST)
 
+            # serialize data
             serializer = SurvivorSerializer(instance=survivor, data=request.data)
 
             # Check if data is valid
@@ -143,6 +159,65 @@ def survivors_update_location(request, pk):
                 return Response(data = data, status=status.HTTP_400_BAD_REQUEST)
 
         # Some exception have occured
+        except Exception as e:
+            print(f'Exception: {e}')
+
+            data = {
+                'status': 500,
+                'error': 'Internal Server Error',
+            }
+
+            return Response(data = data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def survivors_reports(request: Any):
+    """
+    Get percentage of all infected and non infected survivors
+
+    :args: request: Request parameter (WSGI Request)
+    """
+
+    if request.method == 'GET':
+        try:
+            # get all survivor data
+            all_ = Survivor.objects.all()
+
+            # Data is present in survivor table
+            if len(all_) > 0:
+                
+                # Get all non infected survivors
+                non_infected = all_.filter(is_infected=False)
+
+                # if there are any non infected survivors
+                if len(non_infected) > 0:
+
+                    # Calculate percentage of non infected survivors
+                    non_infected_percent = round((len(non_infected)/len(all_)) * 100, 2)
+                    
+                    # Calculate percentage of infected survivors
+                    infected_percent = 100 - non_infected_percent
+
+                # everyone is infected
+                else:
+                    non_infected_percent = 0.00
+                    infected_percent = 100.00
+            
+            # Survivor table is empty
+            else:
+                non_infected_percent = 0.00
+                infected_percent = 0.00
+
+            data = {
+                'status': 200,
+                'message': 'workin GET reports OK',
+                'non infected': f'{non_infected_percent} %',
+                'infected': f'{infected_percent} %'
+            }
+
+            # return repsonse with status 200
+            return Response(data = data, status=status.HTTP_200_OK)
+
+
         except Exception as e:
             print(f'Exception: {e}')
 
