@@ -4,7 +4,7 @@ from django.db import models
 
 class Location(models.Model):
     """
-    A class to to store longitude and latitude information about Survivor 
+    A class to store longitude and latitude information about Survivor 
     ...
     Attributes
     ----------
@@ -19,7 +19,7 @@ class Location(models.Model):
 
 class Survivor(models.Model):
     """
-    A class to to store information about Survivor
+    A class to store information about Survivor
     ...
 
     Attributes
@@ -44,5 +44,5 @@ class Survivor(models.Model):
     age = models.PositiveSmallIntegerField(verbose_name='Age')
     gender = models.CharField(max_length=20, verbose_name='Gender')
     is_infected = models.BooleanField(default=False, verbose_name='Infected')
-    location = models.ForeignKey(Location, default=None, related_name='survivor', on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, default=None, null=True, related_name='survivor', on_delete=models.SET_NULL)
 
